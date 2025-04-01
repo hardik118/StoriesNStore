@@ -1,0 +1,14 @@
+.fade-out {
+    transform: translateX(-200px);
+    opacity: 0;
+    transition: transform 0.5s, opacity 0.5s;
+}
+
+.scrollbar-hide {
+    -ms-overflow-style: none; /* For Internet Explorer and Edge */
+    scrollbar-width: none; /* For Firefox */
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* For Chrome, Safari, and Opera */
+  }
