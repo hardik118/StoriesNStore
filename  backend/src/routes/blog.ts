@@ -496,6 +496,39 @@ try {
     return c.json({interestForm: interestForm});
 
   } )
+
+  blogRouter.post('/IntrestForm', async (c)=>{
+    const prisma = new PrismaClient({
+      datasourceUrl: c.env.DATABASE_URL
+  }).$extends(withAccelerate());
+
+  const body=  await c.req.json();
+
+   const intrestList= body.flat();
+   try {
+    await prisma.user.update({
+      where: {
+        id: c.get('userId')
+      },
+      data:{
+        saveIntrest: {
+          push: intrestList
+        }
+      }
+     });
+     
+    
+    return c.json({msg: true});
+   } catch (error) {
+    return c.json({msg: false});
+    
+    
+   }
+
+
+  })
+
+
   export default blogRouter;
   
   

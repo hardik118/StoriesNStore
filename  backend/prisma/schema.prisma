@@ -21,6 +21,7 @@ model User {
   like      Like[]
   UserShop   UserShop[]
   savedpost String[]
+  saveIntrest String[]
 
   followed Follow[] @relation("userFollowing")
   follwoing Follow[] @relation("userFollowers")
