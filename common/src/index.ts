@@ -12,6 +12,7 @@ export const userSigninInput= z.object({
 
 });
 export const userBlogInput= z.object({
+    id: z.string(),
     title: z.string(),
     content: z.string(),
 })

@@ -128,9 +128,43 @@ return  c.json({msg:"Hey all files uplade", Urls: GetImgUrl});
 
     const userblog= await prisma.post.create({
         data:{
+            id: body.id,
             title:body.title,
             content: body.content,
             authorId: c.get('userId')
+        }
+    })
+
+return c.json({id: userblog.id});
+  
+  })
+
+
+  blogRouter.put('/blog', async (c)=>{
+    //this route is for posting your blog , it lets you add  your blog to the server 
+    const body= await c.req.json();
+    const prisma= new PrismaClient({
+        datasourceUrl: c.env.DATABASE_URL
+    }).$extends(withAccelerate());
+    
+    if(!body.title || !body.content){return c.json({msg: "Hey please add something"}) }
+    try {
+        const {success}= userBlogInput.safeParse(body);
+        if(!success) return c.json({msg:"enter the inputs again "})
+        
+       } catch (error) {
+      c.status(402);
+        return c.json({msg:"Invalid credentials"})
+        
+       }
+
+    const userblog= await prisma.post.update({
+      where:{
+        id: body.id
+      },
+        data:{
+            title:body.title,
+            content: body.content,
         }
     })
 
@@ -436,6 +470,46 @@ try {
       
     }
 
+  })
+ // userhsop docs route to get all docs in the user shop
+
+  blogRouter.get('/store/Shops/Docs/:id', async (c)=>{
+    const prisma = new PrismaClient({
+      datasourceUrl: c.env.DATABASE_URL
+  }).$extends(withAccelerate());
+
+  const storeId= c.req.param('id');
+
+  try {
+    const usershop= await prisma.userShop.findFirst({
+      where:{
+        ShopId: storeId
+      }
+    })
+    if(!usershop) return c.json({msg: 'Hey The Shop Seems busy!'});
+
+  } catch (error) {
+    return c.json({msg:'Hey Try again!'});
+    
+  }
+  try {
+    const userDocs= await prisma.userShop.findMany({
+      where:{
+        ShopId: storeId
+      },
+      include:{
+        shopDoc: true
+      }
+    })
+    return c.json({Docs: userDocs});
+    
+  } catch (error) {
+    return c.json({msg:'Hey Seems store is Empty!'});
+    
+  }
+
+
+       
   })
   
   blogRouter.get("/store/Shops/Bulk", async (c)=>{

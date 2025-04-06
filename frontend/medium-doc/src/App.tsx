@@ -3,10 +3,10 @@ import { Singin } from "./pages/Singin";
 import { Singup } from "./pages/Singup";
 import { Blog } from "./pages/Blog";
 import { BlogFeed } from "./pages/BlogFeed";
-import { WriteBlog } from "./pages/Writeblog";
+import { WriteBlog } from "./pages/Writeblog/Writeblog";
 import Document  from "./pages/Document";
 import { Homepage } from "./pages/HomePage";
-import { UserShop } from "./pages/UserShop";
+import { UserShop } from "./pages/userShop/UserShop";
 import { DocViewer } from "./pages/DocViewer";
 import { UploadDoc } from "./pages/UploadDoc";
 

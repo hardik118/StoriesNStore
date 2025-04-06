@@ -1,7 +1,6 @@
 import { Button } from "../components/button"
 import { InputAndLabel } from "../components/labelAndInput"
-import { Navbar } from "../components/Navbar"
-import React, { useCallback } from 'react';
+import  { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { GlobalNavbar } from "../components/NavBarGlobal";
 
@@ -17,10 +16,7 @@ console.log(acceptedFiles)
         <GlobalNavbar/>
 
         </div>
-        <div className="bg-gray-100 h-8 justify-end flex ">
-        <h1 className="pr-8  "><pre>Welcome to Vivans Store</pre></h1>
-
-        </div>
+       
         <div className="h-full   flex items-center justify-center">
 <div className="h-5/6 w-9/12 flex flex-row  gap-2  ">
 <div className="h-full w-1/2 bg-gray-100  rounded-xl flex  items-center justify-center p-1 " >
