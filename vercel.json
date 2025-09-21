@@ -1,5 +1,13 @@
 {
-"projects":{
-"rootDirectory":"frontend/medium-doc"
-}
+  "version": 2,
+  "builds": [
+    {
+      "src": "frontend/medium-doc/package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "dist" }
+    }
+  ],
+  "routes": [
+    { "src": "/(.*)", "dest": "/index.html" }
+  ]
 }
