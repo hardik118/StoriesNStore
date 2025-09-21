@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "install": "npm rebuild canvas --build-from-source=false"
+
   },
   "dependencies": {
     "@dotlottie/react-player": "^1.6.19",
