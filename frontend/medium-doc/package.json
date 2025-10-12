@@ -9,6 +9,10 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "install": "npm rebuild canvas --build-from-source=false"
+<<<<<<< HEAD
+=======
+
+>>>>>>> b01e7c397388251287632deda0e597289266479f
   },
   "dependencies": {
     "@dotlottie/react-player": "^1.6.19",
