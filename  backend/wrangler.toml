@@ -1,11 +1,15 @@
 name = "backend"
+type = "webpack"
 main = "src/index.ts"
-compatibility_date = "2024-10-13"
-compatibility_flags = [ "nodejs_compat" ]
+compatibility_date = "2025-09-29"
+compatibility_flags = ["nodejs_compat"]
+account_id = "31d5c272408535b295a700e766421aa0"
+workers_dev = true
 
 [vars]
 
 DATABASE_URL = "prisma://accelerate.prisma-data.net/?api_key=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcGlfa2V5IjoiNTAzYzJmMTQtZmRkNy00NDE1LWI2OWQtYWRkNzNiMTJiNzNkIiwidGVuYW50X2lkIjoiOTQ5NmYzNGIzNjdhNTMxYWVlM2IwZDE5ZmM2YzQ1OTg5YTA5Y2M0ZjE5YzkxZTNhNDAxNjk0ZWMwNzFhN2VlYyIsImludGVybmFsX3NlY3JldCI6IjM4MGVkNzY3LTI1OGQtNGZlNS05Y2RlLWQ2MjAwMjhjZjExMSJ9.LOJVqjZWb6WVSIHnqOysDzUOI3Rs4p1KQAS8wQNkq_M"
 JWT_TOKEN = "HY15hy15@"
 
-
+AZURE_BLOB="sp=raci&st=2025-09-24T11:14:24Z&se=2025-09-24T19:29:24Z&spr=https&sv=2024-11-04&sr=c&sig=jis06%2F4s0I9QvCZqO8vgPHjZevBVyLUzdE5B9V%2BZ3Cg%3D"
+AZURE_SAS_TOKEN="st=2025-09-28T10:43:24Z&se=2025-09-28T18:58:24Z&si=snsdocspolicy&spr=https&sv=2024-11-04&sr=c&sig=ObesV7qAuRRV3UzdqBT4CJmoTKTMXWOE2mJ3e88Wf8c%3D"

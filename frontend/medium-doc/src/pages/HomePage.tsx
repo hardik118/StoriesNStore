@@ -7,13 +7,11 @@ import { IntroHomepage } from "./Homepageone"
 import Files from "../../public/Files.json";
 import {  DockDemo } from "../components/ui/dock"
 import { useNavigate } from "react-router-dom"
-import { useState } from "react"
 
 export const Homepage=()=>{
     const navigate= useNavigate();
-    const[email, setemail]= useState('');
-const handleUserSubscribingToMail=(e: React.ChangeEvent<HTMLInputElement>)=>{
-    setemail(e.target.value);
+const handleUserSubscribingToMail=()=>{
+    console.log("reqest send to mail box");
 
 }
 const handleUserSubssciption=()=>{
@@ -38,7 +36,7 @@ const handleUserSubssciption=()=>{
 
   
    <h3><button className="text-md  underline hover:text-green-700" onClick={()=>navigate("/Signin")}>login</button></h3>
-   <h3><button className="text-md  underline hover:text-blue-700" onClick={()=>navigate("/Singup")}>Singup</button></h3>
+   <h3><button className="text-md  underline hover:text-blue-700" onClick={()=>navigate("/signup")}>Singup</button></h3>
   
 </div>
       </div>

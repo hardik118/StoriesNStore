@@ -35,7 +35,7 @@ export const  Singin=()=>{
         try {
          const Response= await axios.post(`${BACK_END_URL}/api/v1/user/Login`, postInput)
  
-         const {userToken}= Response.data;
+         const {userToken, userId}= Response.data;
          if(!userToken){          
                setMsg(Response.data.msg);
                  setismsg(true);
@@ -45,6 +45,8 @@ export const  Singin=()=>{
          }else{
             setFadeOut(true);
                  localStorage.setItem('token', userToken);
+                  localStorage.setItem('userId', userId);
+
                  
                  navigate("/BlogsFeed")
          }

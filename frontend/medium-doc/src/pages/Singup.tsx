@@ -22,22 +22,21 @@ export const Singup = () => {
         const [msg,setMsg]= useState("");
         const [ismsg, setismsg]= useState(false);
 
-const debounce=<T extends (...args: any[])=>void>(func: T, delay: number)=>{
-let timeoutId :  ReturnType<typeof setTimeout> | undefined;
-const context= this;
+const debounce = <T extends (...args: any[]) => void>(func: T, delay: number) => {
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
-return function(...args: Parameters<T>){
-        if(timeoutId) clearTimeout(timeoutId);
-        timeoutId= setTimeout(() => {
-           func.apply( context, args)     
+    return function (...args: Parameters<T>) {
+        if (timeoutId) clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+            func(...args);
         }, delay);
-}
+    }
 }
 const ReqSingup= async()=>{
        try {
         const Response= await axios.post(`${BACK_END_URL}/api/v1/user/signup`, postInput)
 
-        const {token}= Response.data;
+        const {token, userId}= Response.data;
         if(!token){          
               setMsg(Response.data.msg);
                 setismsg(true);
@@ -46,8 +45,9 @@ setismsg(false)
                }, 2000)            
         }else{
                 localStorage.setItem('token', token);
+                localStorage.setItem("userId",userId );
                 if(localStorage.getItem('token') ){
-                        navigate('/BlogsFeed');
+                        navigate('//userintrest-form');
                 }
         }
         

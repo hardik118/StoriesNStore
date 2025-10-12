@@ -8,7 +8,7 @@ interface FunctionalEventBtn{
 
 }
 const colorMap: Record<string, string> = {
-    red: "bg-red-300",
+    purple: "bg-purple-300",
     blue: "bg-blue-300",
     green: "bg-green-300",
     gray: "bg-gray-300",

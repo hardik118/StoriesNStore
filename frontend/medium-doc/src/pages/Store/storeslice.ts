@@ -1,10 +1,10 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit'
 
 interface  ResourcesDocs{
-    AuhtorName: string,
-    ResourceName: string,
-    ResourceDesc: string,
-    ResourceId: string,
+    title: string,
+    Tags: string,
+    metaInfo: string,
+    DocLink: string,
 
 }
 

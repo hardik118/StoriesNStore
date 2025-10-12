@@ -10,6 +10,8 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import {extname} from "path"
 import mime from 'mime';
 import { blob } from 'aws-sdk/clients/codecommit';
+import {uploadWithBlobSasUrl} from "../apiFunc/uploadtoCloudStorage"
+import { uploadDocToAzure } from '../apiFunc/uploadDocttoBlobStorage';
 
 type Variables={
     userId: string
@@ -21,8 +23,8 @@ export const blogRouter = new Hono<{
     Bindings:{
       DATABASE_URL: string
       JWT_TOKEN: string
-      AWS_ACCESS_KEY_ID: string
-      AWS_SECRET_ACCESS_KEY: string
+  AZURE_BLOB: string 
+  AZURE_SAS_TOKEN: string 
       
     }
     }>();
@@ -60,51 +62,16 @@ blogRouter.use("/*", async ( c ,next)=>{
   
   /*Blog routes*/
   blogRouter.post("/uploadToCloudService", async (c)=>{
-      
-    const s3client= new S3Client({
-        region: 'us-east-1',
-        credentials:{
-            accessKeyId: c.env.AWS_ACCESS_KEY_ID,
-            secretAccessKey: c.env.AWS_SECRET_ACCESS_KEY
-        }
-    })
-  const body= await c.req.json();
-  const imgUrlsForBatchJob: string[]= body.imgurls;
-  let  GetImgUrl: string[]=[];
+    const Body  = await c.req.json();
 
+  try {
+    const url = await uploadWithBlobSasUrl( c.env.AZURE_BLOB, Body.img);
+    c.json({ url });
+  } catch (err) {
+    c.status(500)
+    c.json({ error: "Upload failed" });
 
-  const batchJobUploadPromise=  imgUrlsForBatchJob.map((imgurl:string)=>{
-    const base64ImgData= imgurl.replace(/^data:image\/\w+;base64,/,'');
-    const buffer= Buffer.from(base64ImgData, 'base64');
-    const key= `uploads/user-imgs/img-${Date.now()}.JPEG`;
-    console.log(2);
-  GetImgUrl.push("https://hyadav-testcase.s3.us-east-1.amazonaws.com/"+key);
-
-    const params= {
-        Bucket: "hyadav-testcase",
-        Key : key,
-        Body: buffer,
-        ContentEncoding: "base64",
-        ContentType: "image/JPEG"
-    }
-    const commnad = new PutObjectCommand(params);
-
-    return s3client.send(commnad).catch(()=>{
-        console.log(3);
-        return c.json({msg:"Try again! Some issue while publishing "});
-
-    });
-
-
-
-
-  })
-  await Promise.all(batchJobUploadPromise);
-console.log(4);
-return  c.json({msg:"Hey all files uplade", Urls: GetImgUrl});
-
-
-   
+  }
   })
 
   
@@ -139,6 +106,67 @@ return c.json({id: userblog.id});
   
   })
 
+blogRouter.put('/blog/publish', async (c) => {
+  const body = await c.req.json();
+  const prisma = new PrismaClient({
+    datasourceUrl: c.env.DATABASE_URL,
+  }).$extends(withAccelerate());
+
+  if (!body.title || !body.content) {
+    return c.json({ msg: "Hey please add something" });
+  }
+
+  try {
+    const { success } = userBlogInput.safeParse(body);
+    if (!success) return c.json({ msg: "Enter the inputs again" });
+  } catch (error) {
+    c.status(402);
+    return c.json({ msg: "Invalid credentials" });
+  }
+
+  let updatedContent = body.content;
+
+  // Match base64 images in Quill content
+  const base64Regex = /<img[^>]+src=["'](data:image\/[^"']+)["'][^>]*>/g;
+  const matches = [...updatedContent.matchAll(base64Regex)];
+  let sucess= true;
+
+  for (const match of matches) {
+    const base64Img = match[1];
+    try {
+      // Upload to Azure Blob
+      const azureUrl = await uploadWithBlobSasUrl(
+        c.env.AZURE_BLOB,
+        base64Img
+      );
+
+      // Replace base64 with Azure URL
+      updatedContent = updatedContent.replace(base64Img, azureUrl);
+    } catch (err) {
+      sucess= false;
+      console.error("Failed to upload image to Azure", err);
+    }
+  }
+
+ if(sucess){
+   // Save blog with updated content
+  const userblog = await prisma.post.update({
+    where: { id: body.id },
+    data: {
+      title: body.title,
+      content: updatedContent,
+      published: true
+    },
+  });
+
+  return c.json({ id: userblog.id },200);
+ }else{
+  return c.json({msg: "could not upload !!"}, 400);
+  
+ }
+});
+
+
 
   blogRouter.put('/blog', async (c)=>{
     //this route is for posting your blog , it lets you add  your blog to the server 
@@ -160,7 +188,8 @@ return c.json({id: userblog.id});
 
     const userblog= await prisma.post.update({
       where:{
-        id: body.id
+        id: body.id,
+        published: false
       },
         data:{
             title:body.title,
@@ -300,78 +329,59 @@ try {
 
   })
 
-  blogRouter.post('/store/UploadDocToStore', async (c)=>{
-
-    const prisma = new PrismaClient({
-      datasourceUrl: c.env.DATABASE_URL
+blogRouter.post("/store/UploadDocToStore", async (c) => {
+  const prisma = new PrismaClient({
+    datasourceUrl: c.env.DATABASE_URL,
   }).$extends(withAccelerate());
-    
-    const document =  await c.req.json();
 
-     const s3client= new S3Client({
-      region: 'us-east-1',
-      credentials:{
-          accessKeyId: c.env.AWS_ACCESS_KEY_ID,
-          secretAccessKey: c.env.AWS_SECRET_ACCESS_KEY
-      }
+  const formData = await c.req.parseBody(); // { title, metaInfo, tags, file }
 
-     })
-     const Usershop= await prisma.userShop.findFirst({
-      where:{
-        userId: c.get('userId')
+  const file = formData["file"] as File; // raw file object
+  const title = formData["title"] as string;
+  const metaInfo = formData["metaInfo"] as string;
+  const tags = formData["tags"] as string;
 
-      }
-    })
-    if(!Usershop) return c.json({msg:"Create a Shop , Shop is not created"});
-
-    if (!document.fileName || !document.content) {
-      return c.json({ msg: "Missing file data" }, 400);
+  if (!file || !title) {
+    return c.json({ msg: "Missing file data" }, 400);
   }
 
-     const extension= extname(document.fileName);
-     const  cleanTxt= extension.replace('.','');
+  const Usershop = await prisma.userShop.findFirst({
+    where: { userId: c.get("userId") },
+  });
 
-     const fileType=mime.getType(cleanTxt) || 'application/octet-stream';
-     const fileName: string = `uploads/user-doc/doc-${Date.now()}.${extension}` ;
-
-
-
-     const params= {
-      Bucket: "hyadav-testcase",
-      Key : fileName,
-      Body: document.content,
-      ContentType: fileType,
+  if (!Usershop) {
+    return c.json({ msg: "Create a Shop , Shop is not created" });
   }
-  const Title: string = document.title;
-  const metaInfo: string= document.metaInfo;
-  const Tags : string = document.tags;
-  const DocLink= `https://hyadav-testcase.s3.us-east-1.amazonaws.com/${fileName}`;
 
   try {
-    const commnad= new PutObjectCommand(params);
-    console.log('s3');
+    // Upload raw file to Azure
+    const fileUrl = await uploadDocToAzure(
+      "https://storiesnstore.blob.core.windows.net/upload-docs",
+      c.env.AZURE_SAS_TOKEN,
+      file.name,
+      file // send the raw file directly
+    );
 
-    await s3client.send(commnad);
-    console.log('prisma');
     await prisma.shopDoc.create({
-      data:{
-        title: Title,
-        metaInfo : metaInfo,
-        Tags: Tags,
-        DocLink: DocLink,
-        shopId: c.get('userId')
+      data: {
+        title,
+        metaInfo,
+        Tags: tags,
+        DocLink: fileUrl,
+        shopId: Usershop.ShopId,
+      },
+    });
 
-      }
-
-    })
-    return c.json({msg: "created Your Doc"});
-
+    return c.json({ msg: "Created your Doc", url: fileUrl });
   } catch (error) {
-    return c.json({msg:" could not upload the doc try again"});
-    
+    console.error(error);
+    return c.json({ msg: "Could not upload the doc, try again" }, 500);
   }
+});
 
-  })
+
+
+  
 
   blogRouter.get("/store/Bulk", async (c)=>{
     
@@ -478,26 +488,23 @@ try {
       datasourceUrl: c.env.DATABASE_URL
   }).$extends(withAccelerate());
 
-  const storeId= c.req.param('id');
+  const userId= c.req.param('id');
 
   try {
-    const usershop= await prisma.userShop.findFirst({
+    const user= await prisma.user.findFirst({
       where:{
-        ShopId: storeId
+        id: userId
       }
     })
-    if(!usershop) return c.json({msg: 'Hey The Shop Seems busy!'});
+    if(!user) return c.json({msg: 'Hey The user doesnot exists !'});
 
-  } catch (error) {
-    return c.json({msg:'Hey Try again!'});
-    
-  }
-  try {
+    try {
     const userDocs= await prisma.userShop.findMany({
       where:{
-        ShopId: storeId
+        userId: user.id
       },
-      include:{
+      select:{
+        Name: true,
         shopDoc: true
       }
     })
@@ -507,6 +514,12 @@ try {
     return c.json({msg:'Hey Seems store is Empty!'});
     
   }
+
+  } catch (error) {
+    return c.json({msg:'Hey Try again!'});
+    
+  }
+  
 
 
        
@@ -526,7 +539,9 @@ try {
     const Shops= await prisma.userShop.findMany({
       skip: off_set,
       take: Max_call,
-      include:{
+      select:{
+        Name: true,
+        shopDesc: true,
         user:{
           select:{
             name: true,
@@ -571,6 +586,30 @@ try {
 
   } )
 
+
+  blogRouter.get("/userInterest", async (c)=>{
+     const prisma = new PrismaClient({
+      datasourceUrl: c.env.DATABASE_URL
+  }).$extends(withAccelerate());
+
+  try {
+   const userInterest = await prisma.user.findFirst({
+      where: {
+        id: c.get('userId')
+      },
+       select: {
+    saveIntrest: true,   // only fetch this field
+  }
+     });
+     
+    console.log(userInterest);
+    return c.json({userInterest});
+   } catch (error) {
+    return c.json({});
+
+   }
+  })
+
   blogRouter.post('/IntrestForm', async (c)=>{
     const prisma = new PrismaClient({
       datasourceUrl: c.env.DATABASE_URL
@@ -598,6 +637,38 @@ try {
     
     
    }
+
+
+  })
+
+
+   blogRouter.post('/userUpi', async (c)=>{
+    const prisma = new PrismaClient({
+      datasourceUrl: c.env.DATABASE_URL
+  }).$extends(withAccelerate());
+
+  const user = await prisma.user.findFirst({
+    where:{
+       id: c.get('userId')
+    }
+  });
+
+  if(!user) return c.json({msg: "no such user exists!! "}, 404);
+   // Build full UPI link
+  const amount = Number(c.req.query('amount')) || 100; // default 100 if not passed
+  const creatorName = user?.name || "Creator"; // optional, can store in DB
+  const upiId = user.userUpiId;
+  console.log(user);
+
+  const upiLink = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(
+    creatorName
+  )}&am=${amount}&cu=INR`;
+
+  console.log(upiLink);
+
+  return c.json({ upiLink }, 200);
+
+  
 
 
   })

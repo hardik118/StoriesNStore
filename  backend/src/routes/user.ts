@@ -17,6 +17,7 @@ export const userRouter = new Hono<{
   Bindings:{
   DATABASE_URL: string
   JWT_TOKEN: string
+  AZURE_BLOB: string 
 }
 }>();
 
@@ -69,6 +70,7 @@ c.status(402);
   const password: string= body.password;
   
   const hashUserPassword = await  bcrypt.hash(password, salt);
+  let userId;
   
   const email: string= body.email;
   try {
@@ -93,6 +95,7 @@ c.status(402);
     })
   
     userToken= await sign({id: user.id}, c.env.JWT_TOKEN);
+    userId= user.id;
   
   } catch (error) {
     return c.json({msg:'the user is not created'});
@@ -101,7 +104,8 @@ c.status(402);
   
   
     return c.json({msg:"the user is created ",
-      token: userToken
+      token: userToken,
+      userId: userId
     });
   
   })
@@ -114,6 +118,8 @@ c.status(402);
   
   const body=await c.req.json();
   let userToken : string;
+  let userId: string ;
+
   try {
     const {success}= userSigninInput.safeParse(body);
     if(!success) return c.json({msg:"enter the inputs again "})
@@ -142,6 +148,7 @@ c.status(402);
    if(!user) return c.json({msg:"enter valid credentials "}) ;
   
    userToken= await sign({id: user.id}, c.env.JWT_TOKEN);
+   userId= user.id;
   
   
   } catch (error) {
@@ -150,7 +157,8 @@ c.status(402);
     
   }
     return c.json({msg:"the user is singed ",
-      userToken : userToken
+      userToken : userToken,
+      userId: userId
     });
     
   })
@@ -200,6 +208,48 @@ console.log(error);
   }
  return c.text("the post has been saved ");
 
+})
+
+userRouter.post("/updateUser/password", async (c) => {
+  const prisma = new PrismaClient({
+    datasourceUrl: c.env.DATABASE_URL,
+  }).$extends(withAccelerate());
+
+  const body = await c.req.json();
+  const { currentPassword, newPassword } = body;
+
+  if (!currentPassword || !newPassword) {
+    return c.json({ msg: "Both current and new passwords are required" }, 400);
+  }
+
+  try {
+    // Get user from DB
+    const user = await prisma.user.findFirst({
+      where: { id: c.get("userId") },
+    });
+
+    if (!user) return c.json({ msg: "User not found" }, 404);
+
+    // Compare current password
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) return c.json({ msg: "Current password is incorrect" }, 401);
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    // Update password
+    await prisma.user.update({
+      where: { id: c.get("userId") },
+      data: { password: hashedPassword },
+    });
+
+    return c.json({ msg: "Password updated successfully" });
+  } catch (error) {
+    console.error(error);
+    return c.json({ msg: "Failed to update password", error }, 500);
+
+  }
 })
   
 export default userRouter;

@@ -13,6 +13,9 @@ interface UserBlogProps{
 
 }
 
+
+
+
 const saveThePost= async (id: string, setmsg: React.Dispatch<React.SetStateAction<boolean>>)=>{
     
     try {
@@ -28,14 +31,17 @@ data:{
         
             }
         })
-        if(Res_saved.status=200){
+        if(Res_saved.status === 200){
             setmsg(true);
         }
     
 
     } catch (error) {
+        console.log(error);
+
         
     }
+
 
 
 }
@@ -44,13 +50,17 @@ export const UserBlog=(props: UserBlogProps)=>{
 
 const [msg, setmsg]= useState(false);
 
-
     const navigate= useNavigate();
+const handleCardClick = () => {
+    const id = props.userProfile; // use actual post ID if needed
+    navigate('/Blog', {state: {id}});
+  }
+
     //const Avatar: String= props.userProfile.split(" ")[0] || "Ano";
     const Avatar: string="ano";
     const ContentPretty:string= props.content.length> 100 ?props.content.substring(0, 100)+"...":props.content
 
-    return <div className=" grid  grid-cols-6 p-5 pr-3">
+    return <div onClick={handleCardClick} className=" grid  grid-cols-6 p-5 pr-3 border-b  border-b-gray-400">
        <div className="  col-span-4   h-52 flex flex-col">
 <div className="flex flex-row gap-1 pl-2 pt-2  text-gray-500">
 <div className="h-8 w-8 rounded-xl bg-black flex items-center justify-center">
@@ -101,14 +111,10 @@ const [msg, setmsg]= useState(false);
      
        <div className="col-span-2 h-52 flex items-center justify-center">
        <button type="submit"   onClick={()=>{
-                console.log("navigateds");
                 const id=props.userProfile;
 navigate('/Blog', {state: {id}})
             }}>
-            <div className="bg-gray-300 rounded-md w-40 h-40">
             
-        
-            </div>
             </button>
         
 

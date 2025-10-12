@@ -22,7 +22,8 @@ model User {
   UserShop   UserShop[]
   savedpost String[]
   saveIntrest String[]
-
+  userUpiId   String @default("not_setup@upi")
+  
   followed Follow[] @relation("userFollowing")
   follwoing Follow[] @relation("userFollowers")
 
@@ -75,6 +76,6 @@ model ShopDoc{
   metaInfo String
   Tags String
   DocLink String
-  userShop UserShop @relation(fields: [id], references: [ShopId])
-  shopId String
+    shopId String
+  userShop UserShop @relation(fields: [shopId], references: [ShopId])
 }

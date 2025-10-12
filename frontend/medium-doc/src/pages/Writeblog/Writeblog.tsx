@@ -10,6 +10,7 @@ import { BACK_END_URL } from "../../../congif";
 import { RootState } from "../../reduxStore/Store";
 import ConfirmationBox from "../../components/confirmationBox";
 import FloatingOverlay from "../../components/editorsupport";
+import { Msgbox } from "../../components/Msgbox";
 
 
 export const WriteBlog = () => {
@@ -17,6 +18,10 @@ export const WriteBlog = () => {
   const [draftId, setDraftId]= useState('');
   const [confirmaction, setConfirmation]= useState(false);
   const [editorcofirmation, seteditorcofirmation]= useState(false);
+  const [publish  , setpublish]= useState(false);
+  const [msg]= useState("");
+  const[timer, settimer]= useState(false);
+
 
 
   
@@ -60,6 +65,7 @@ export const WriteBlog = () => {
   },[])
 
   const userStoryContent= useSelector((state: RootState)=> draftId && state.writeblogSlicer[draftId] ? state.writeblogSlicer[draftId].content : "");
+console.log(userStoryContent);
 
 
   useEffect(()=>{
@@ -105,8 +111,13 @@ export const WriteBlog = () => {
   
   const quillref= useRef<ReactQuill>(null);
 
-  const modules = {
-    toolbar: [
+
+  
+
+
+const modules = {
+  toolbar: {
+    container: [
       // Dropdown for headers
       [{ header: [1, 2, 3, 4, 5, 6, false] }],
       // Font selection
@@ -123,13 +134,15 @@ export const WriteBlog = () => {
       [{ color: [] }, { background: [] }],
       // Superscript and subscript
       [{ script: 'sub' }, { script: 'super' }],
-      // Links and images
+      // Links, images, videos
       ['link', 'image', 'video'],
       // Clear formatting
       ['clean'],
-      
-    ]
-  };
+    ],
+   
+  },
+};
+
 
   const quillSlides = [
     {
@@ -165,7 +178,7 @@ export const WriteBlog = () => {
   ];
   
 
-  const handleKeyPress=(event:React.onmo)=>{
+  const handleKeyPress=(event: React.KeyboardEvent) => {
     if(event.key=="Enter"){
        const quillRedCurrent= quillref.current;
        if(quillRedCurrent){
@@ -224,7 +237,45 @@ const handleEditoInfo=()=>{
 
 }
 
-const handlePublish=()=>{
+const handlepublish=()=>{
+setpublish(true);
+console.log(userStoryContent);
+
+}
+
+
+const publishWork=  async ()=>{
+
+  console.log("we are publsig ");
+
+
+
+  const res=  await axios.put(`${BACK_END_URL}/api/v1/blog/blog/publish`, {
+    id: draftId,
+    title: title,
+    content: userStoryContent
+  },{
+    headers:{
+      Authorization: `Bearer ${localStorage.getItem('token')}`
+    }
+  })
+
+  if(res.status!==200){
+    settimer(prev=>!prev);
+    setTimeout(() => settimer(prev=>!prev), 3000);
+  }
+console.log( await res.data);
+
+  localStorage.setItem(`draft-${draftId}`, "");
+  localStorage.setItem("draft-post-id", "");
+  dispatch(cleanStory({id: draftId}));
+  console.log('publoshed ');
+  setpublish(false);
+    localStorage.setItem("title", "");
+
+  
+
+
 
 }
  
@@ -235,7 +286,10 @@ const handlePublish=()=>{
     return (
         <div className="grid grid-rows-12 h-screen ">
         { editorcofirmation &&  <FloatingOverlay  slides={quillSlides} ></FloatingOverlay>}
+        {timer && <Msgbox msg={msg}></Msgbox>}
           <ConfirmationBox heading="Save the Story ! you want to later work on it." isOpen={confirmaction} onCancel={()=>setConfirmation(false)} onConfirm={saveStory}></ConfirmationBox>
+          <ConfirmationBox heading="Publish  the Story; Let's gooo" isOpen={publish} onCancel={()=>setpublish(false)} onConfirm={publishWork}></ConfirmationBox>
+
             <div className="row-span-1 flex items-start justify-between p-1 ">
                <div  className="w-1/2  h-full flex items-center justify-start pl-2 gap-2">
                <h1 className="font-semibold text-3xl ">Stories</h1>
@@ -244,7 +298,7 @@ const handlePublish=()=>{
                 <div className=" w-1/2  h-full flex items-center justify-end gap-3 p-1 ">
                 <FunctionalButton  onClick={handleEditoInfo}  heading="EditorInfo" color='gray' />
 
-                <FunctionalButton onClick={handlePublish}  heading="Publish" color='blue' />
+                <FunctionalButton onClick={handlepublish}  heading="Publish" color='blue' />
 
                 <FunctionalButton onClick={handleSave} heading="Save" color='green' />
                 </div>

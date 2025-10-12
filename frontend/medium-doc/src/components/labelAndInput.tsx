@@ -5,6 +5,7 @@ interface InputAndLabelProps{
     placeholder?: string,
     onChange?: (e:ChangeEvent<HTMLInputElement>)=>void,
     type?:string
+    value?: string 
 
 }
 export const InputAndLabel= (props: InputAndLabelProps)=>{
@@ -13,7 +14,7 @@ export const InputAndLabel= (props: InputAndLabelProps)=>{
 {props.heading}
         </div>
         <div className="p-1 ">
-<input  type={props.type || "text"}  className="min-h-8 overflow-hidden scrollbar-hide contenteditable rounded-md text-center w-full shadow-lg " placeholder={props.placeholder} onChange={props.onChange}/>
+<input value={props.value}  type={props.type || "text"}  className="min-h-8 overflow-hidden scrollbar-hide contenteditable rounded-md text-center w-full shadow-lg " placeholder={props.placeholder} onChange={props.onChange}/>
 
         </div>
     </div>

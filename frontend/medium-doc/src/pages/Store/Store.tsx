@@ -20,9 +20,7 @@ export const Store=()=>{
     const ResourceDocRef= useRef(null);
     const [fetching, setfetching]= useState(false);
 
-console.log(ResourceDocs);
-console.log('helllo');
-console.log(Shops);
+
     
 
     useEffect(()=>{
@@ -59,8 +57,8 @@ if(Shops.length==0){
         const observer= new IntersectionObserver((entries)=>{
             const entry= entries[0];
             if(entry.isIntersecting && !fetching ){
-               /* setpage((prevpage)=>prevpage+1);
-                setfetching(true);*/
+                setpage((prevpage)=>prevpage+1);
+                setfetching(true);
             }
         })
         if(ResourceDocRef.current){
@@ -104,19 +102,19 @@ if(Shops.length==0){
 </div>
 <div className="min-h-96 overflow-y-auto p-4">
     {
-        ResourceDocs.map((Docs)=>(
-            <ReactangelDivs height="24" width="full" >
-            <DocsCard 
-            name={Docs.AuhtorName}
-            DocsName={Docs.ResourceName}
-            DocDesc={Docs.ResourceDesc}
-            DocId={Docs.ResourceId}
+        ResourceDocs.map((Docs) => (
+    <div className="mb-4"> 
+      <ReactangelDivs height="24" width="full">
+        <DocsCard
+          name={Docs.title}
+          DocsName={Docs.Tags}
+          DocDesc={Docs.metaInfo}
+          DocId={Docs.DocLink}
+        />
+      </ReactangelDivs>
+    </div>
+  ))
 
-             >
-
-            </DocsCard>
-             </ReactangelDivs>
-        ))
     }
 
 
@@ -131,15 +129,21 @@ if(Shops.length==0){
 <div className="h-screen w=5/6 flex flex-col  ">
 <h1 className="text-lg flex flex-row border-b"><span className="text-2xl  "><pre>Our</pre></span> <span className="text-violet-500 mt-1 pl-2 "><pre>Recoomeation</pre></span></h1>
 
-<div className="h-full w-full p-4  grid grid-cols-2 grid-row-2 gap-4">
-    {
-        Shops.map((shop)=>(
-
-            <UserShopCard shopname={shop.Name}  shopDesc={shop.shopDesc} shopId={shop.ShopId} name={shop.user.name} folloers={shop.user._count.followed}  />
-
-        ))
-    }
+<div className="h-full w-full p-4 mt-4 flex justify-evenly">
+  <div className="grid grid-cols-2 gap-6 max-w-5xl">
+    {Shops.map((shop) => (
+      <UserShopCard
+        key={shop.ShopId}
+        shopname={shop.Name}
+        shopDesc={shop.shopDesc}
+        shopId={shop.ShopId}
+        name={shop.user.name}
+        folloers={shop.user._count.followed}
+      />
+    ))}
+  </div>
 </div>
+
 
 
 
